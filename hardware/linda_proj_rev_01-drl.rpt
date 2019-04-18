@@ -1,5 +1,5 @@
-Drill report for /home/church/snap/kicad-snap/common/Hearts_rev_01/linda_proj_rev_01/linda_proj_rev_01.kicad_pcb
-Created on Wed 20 Feb 2019 08:01:24 PM PST
+Drill report for /home/church/snap/kicad-snap/common/Rev2/linda_proj_rev_01/linda_proj_rev_01.kicad_pcb
+Created on Wed 17 Apr 2019 06:01:40 PM PDT
 
 Copper Layer Stackup:
     =============================================================
@@ -10,10 +10,10 @@ Copper Layer Stackup:
 Drill file 'linda_proj_rev_01.drl' contains
     plated through holes:
     =============================================================
-    T1  0.40mm  0.016"  (41 holes)
+    T1  0.40mm  0.016"  (25 holes)
     T2  2.20mm  0.087"  (1 hole)
 
-    Total plated holes count 42
+    Total plated holes count 26
 
 
 Drill file 'linda_proj_rev_01-NPTH.drl' contains
