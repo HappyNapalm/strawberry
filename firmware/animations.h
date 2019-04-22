@@ -25,6 +25,9 @@ void LED_Output_Single (unsigned char ucLED, unsigned char bSignal);
 void clear_LED (void);
 
 void LED_Pattern_01 (void);
+void LED_Pattern_Master(unsigned char ucAnimationCount);
+void check_input(void);
+unsigned char gucAnimationState;
 
 
 

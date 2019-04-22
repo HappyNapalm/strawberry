@@ -30,8 +30,8 @@
 //Go idle at 5 minutes. Read the manual to make sure that you have
 //everything setup right!
 
-#define BUTTON PORTAbits.RA0
-#define NUM_LEDS 15
+
+
 
 void main (void)
 {
@@ -40,7 +40,8 @@ void main (void)
     clear_LED();
     while(1)
     {
-        LED_Pattern_01 ();
+        check_input();
+        LED_Pattern_Master(gucAnimationState);
     }
  
 

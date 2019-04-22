@@ -11,9 +11,8 @@ void LED_setup (void)
     //LATD = 0x00;
     //LATC = 0x00;
     //Mode Switching button
-    TRISA = 0b00000001;
+    TRISB = 0b00000001;
     //Remember to set up a software debounce
-    //!!!Make it so this is an interrupt!!!
 }
 
 void Timer_and_Interrupt_setup (void)
