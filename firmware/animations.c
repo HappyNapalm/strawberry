@@ -44,19 +44,75 @@ void check_input(void){
     }
 }
 
-//ucLED is 0-15. 
+/*
+ *LATD/LATC and equivalent LED.
+ * D1 -> Pin 37 -> RC3              D2 -> Pin 1 -> RC7
+ * D3 -> Pin 41 -> RD3              D4 -> Pin 5 -> RD7
+ * D5 -> Pin 36 -> RC2              D6 -> Pin 44 -> RC6
+ * D7 -> Pin 40 -> RD2              D8 -> Pin 4 -> RD6
+ * D9 -> Pin 35 -> RC1              D10 -> Pin 43 -> RC5
+ * D11 -> Pin 39 -> RD1             D12 -> Pin 3 -> RD5
+ * D13 -> Pin 32 -> RC0             D14 -> Pin 42 -> RC4
+ * D15 -> Pin 38 -> RD0             D16 -> Pin 2 -> RD4
+ */
+
+//This function maps the led number to the pin in the table above. ucLED and bSignal
+//are filtered to behave as expected in the function, reducing it the lower nibble
+//for the led being addressed.
 void LED_Output_Single (unsigned char ucLED, unsigned char bSignal)
 {
-    //Write value bSignal to the correct LATch. 
-    if(ucLED > 7)
+    bSignal = bSignal ? 1 : 0;
+    ucLED = ucLED & 0x0F;
+    switch (ucLED)
     {
-        //8-15 LEDS
-        LATD = (bSignal << (ucLED - 7));
-    }
-    else
-    {
-        //0-7 LEDS
-        LATC = (bSignal << (ucLED));
+        case 0:
+            LATCbits.LATC3 = bSignal;
+            break;
+        case 1:
+            LATCbits.LATC7 = bSignal;
+            break;
+        case 2:
+            LATDbits.LATD3 = bSignal;
+            break;
+        case 3:
+            LATDbits.LATD5 = bSignal;
+            break;
+        case 4: 
+            LATCbits.LATC2 = bSignal;
+            break;
+        case 5:
+            LATCbits.LATC6 = bSignal;
+            break;
+        case 6:
+            LATDbits.LATD2 = bSignal;
+            break;
+        case 7:
+            LATDbits.LATD6 = bSignal;
+            break;
+        case 8:
+            LATCbits.LATC1 = bSignal;
+            break;
+        case 9:
+            LATCbits.LATC5 = bSignal;
+            break;
+        case 10:
+            LATDbits.LATD1 = bSignal;
+            break;
+        case 11:
+            LATDbits.LATD5 = bSignal;
+            break;
+        case 12:
+            LATCbits.LATC0 = bSignal;
+            break;
+        case 13:
+            LATCbits.LATC4 = bSignal;
+            break;
+        case 14:
+            LATDbits.LATD0 = bSignal;
+            break;
+        case 15:
+            LATDbits.LATD4 = bSignal;
+            break;
     }
 }
 
@@ -65,7 +121,9 @@ void clear_LED (void)
     LATD = 0x00;
     LATC = 0x00;
 }
-//1 Led at a time
+
+
+//Cycle up between LEDs, setting them as timer elapses
 void LED_Pattern_01 (void)
 {
     unsigned short uwCurrent;
@@ -77,15 +135,33 @@ void LED_Pattern_01 (void)
         clear_timer0();
         if (ucCount > 15)
         {
+            clear_LED();
             ucCount = 0;
         }
         LED_Output_Single(ucCount, 1);
         ucCount++;
     }
 }
+
+//Cycle up setting LEDs then cycle down clearing LEDs
 void LED_Pattern_02 (void)
 {
+    unsigned short uwCurrent;
+    static unsigned char ucCount;
+    static unsigned char bDir;
     
+    uwCurrent = check_time0();
+    if(uwCurrent > (32000))
+    {
+        clear_timer0();
+        if (ucCount > 15)
+        {
+            ucCount = 0;
+            bDir = !bDir;
+        }
+        LED_Output_Single(ucCount, bDir);
+        ucCount++;
+    }
 }
 void LED_Pattern_03 (void)
 {
