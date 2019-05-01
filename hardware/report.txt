@@ -1,7 +1,9 @@
-Plot file '/home/church/Desktop/Soaring_Eagle_rev_02/linda_proj_rev_01-F.Cu.gbr' created.
-Plot file '/home/church/Desktop/Soaring_Eagle_rev_02/linda_proj_rev_01-B.Cu.gbr' created.
-Plot file '/home/church/Desktop/Soaring_Eagle_rev_02/linda_proj_rev_01-B.SilkS.gbr' created.
-Plot file '/home/church/Desktop/Soaring_Eagle_rev_02/linda_proj_rev_01-F.SilkS.gbr' created.
-Plot file '/home/church/Desktop/Soaring_Eagle_rev_02/linda_proj_rev_01-B.Mask.gbr' created.
-Plot file '/home/church/Desktop/Soaring_Eagle_rev_02/linda_proj_rev_01-F.Mask.gbr' created.
-Plot file '/home/church/Desktop/Soaring_Eagle_rev_02/linda_proj_rev_01-Edge.Cuts.gbr' created.
+Info: Output directory '/home/church/Desktop/Soaring_Eagle_rev_03' created.
+
+Plot file '/home/church/Desktop/Soaring_Eagle_rev_03/linda_proj_rev_01-F.Cu.gbr' created.
+Plot file '/home/church/Desktop/Soaring_Eagle_rev_03/linda_proj_rev_01-B.Cu.gbr' created.
+Plot file '/home/church/Desktop/Soaring_Eagle_rev_03/linda_proj_rev_01-B.SilkS.gbr' created.
+Plot file '/home/church/Desktop/Soaring_Eagle_rev_03/linda_proj_rev_01-F.SilkS.gbr' created.
+Plot file '/home/church/Desktop/Soaring_Eagle_rev_03/linda_proj_rev_01-B.Mask.gbr' created.
+Plot file '/home/church/Desktop/Soaring_Eagle_rev_03/linda_proj_rev_01-F.Mask.gbr' created.
+Plot file '/home/church/Desktop/Soaring_Eagle_rev_03/linda_proj_rev_01-Edge.Cuts.gbr' created.
