@@ -30,18 +30,39 @@
 //Go idle at 5 minutes. Read the manual to make sure that you have
 //everything setup right!
 
-
+void flash(void)
+{
+    clear_timer0();
+    unsigned char uc = 0;
+    while(uc == 0)
+    {
+        guwCheckTime = check_time0();
+        LATD = 0xFF;
+        LATC = 0xFF;
+        if(guwCheckTime > 16000)
+        {
+            uc = 1;
+        }
+    }
+}
 
 
 void main (void)
 {
 
+    
     setup();
+    flash();
     clear_LED();
+    start_up();
     while(1)
     {
-        check_input();
-        LED_Pattern_Master(gucAnimationState);
+        //check_input();
+        //LED_Pattern_Master(gucAnimationState);
+        LED_Pattern_05();
+        
+        //LATD = 0xFF;
+        //LATC = 0xFF;
     }
  
 

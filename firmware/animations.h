@@ -27,8 +27,13 @@ void clear_LED (void);
 void LED_Pattern_01 (void);
 void LED_Pattern_Master(unsigned char ucAnimationCount);
 void check_input(void);
-unsigned char gucAnimationState;
-
+extern unsigned char gucAnimationState;
+void check_input(void);
+void LED_Pattern_03(void);
+void LED_Pattern_02 (void);
+void LED_Pattern_04 (void);
+void LED_Pattern_05 (void);
+extern unsigned short guwCheckTime;
 
 
 #endif	/* ANIMATIONS_H */

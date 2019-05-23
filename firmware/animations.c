@@ -11,9 +11,12 @@
 
 
 unsigned char gucAnimationState;
+unsigned short guwCheckTime;
 
-
-
+#define LONG_ANIMATION_TIME 16000
+#define SHORT_ANIMATION_TIME 2000
+#define BLINKY_ANIMATION_TIME 500
+#define STROBE_TIME 100
 
 unsigned short check_time0 (void)
 {
@@ -29,18 +32,39 @@ void clear_timer0( void )
 }
 
 static unsigned char gbButtonState;
-static unsigned char gucDebounceTime = 200;
+static unsigned char gucDebounceTime = 50;
+unsigned char gbWoot = 1;
+
+void clear_LED (void)
+{
+    LATD = 0x00;
+    LATC = 0x00;
+}
 
 void check_input(void){
-    unsigned short uw;
-    uw =  check_time0();
-    if (BUTTON)
+    unsigned short uc;
+    static unsigned short uc_old;
+    unsigned char bButtonStateOld;
+    gbButtonState = BUTTON;
+    if (
+            bButtonStateOld == gbButtonState
+         && BUTTON == 1
+        )
     {
-        gbButtonState = 1;
+        uc =  check_time0();
+        if (uc > (uc_old + gucDebounceTime))
+        {
+            LATD = ~LATD;
+            LATC = ~LATC;
+            gucAnimationState++;
+            //gbWoot = !(gbWoot);
+            uc_old = uc;
+            clear_timer0();
+        }
     }
-    if (uw > gucDebounceTime)
+    else
     {
-        gucAnimationState++;
+        bButtonStateOld = gbButtonState;
     }
 }
 
@@ -116,24 +140,19 @@ void LED_Output_Single (unsigned char ucLED, unsigned char bSignal)
     }
 }
 
-void clear_LED (void)
-{
-    LATD = 0x00;
-    LATC = 0x00;
-}
+
 
 
 //Cycle up between LEDs, setting them as timer elapses
 void LED_Pattern_01 (void)
 {
-    unsigned short uwCurrent;
     static unsigned char ucCount;
     
-    uwCurrent = check_time0();
-    if(uwCurrent > (32000))
+    guwCheckTime = check_time0();
+    if(guwCheckTime > (LONG_ANIMATION_TIME))
     {
         clear_timer0();
-        if (ucCount > 15)
+        if (ucCount > 16)
         {
             clear_LED();
             ucCount = 0;
@@ -146,15 +165,14 @@ void LED_Pattern_01 (void)
 //Cycle up setting LEDs then cycle down clearing LEDs
 void LED_Pattern_02 (void)
 {
-    unsigned short uwCurrent;
     static unsigned char ucCount;
     static unsigned char bDir;
     
-    uwCurrent = check_time0();
-    if(uwCurrent > (32000))
+    guwCheckTime = check_time0();
+    if(guwCheckTime > (LONG_ANIMATION_TIME))
     {
         clear_timer0();
-        if (ucCount > 15)
+        if (ucCount > 16)
         {
             ucCount = 0;
             bDir = !bDir;
@@ -165,15 +183,81 @@ void LED_Pattern_02 (void)
 }
 void LED_Pattern_03 (void)
 {
+    unsigned char aucOutRing[]={4,13,9,5,1,3,14,10,6,2,12,8};
+    unsigned char aucInRing[]={16,15,11,7};
+    static unsigned char ucOutCount;
+    static unsigned char ucInCount;
     
+    guwCheckTime = check_time0();
+    if(ucOutCount > sizeof(aucOutRing))
+    {
+        ucOutCount = 0;
+    }
+    
+    if(guwCheckTime > (LONG_ANIMATION_TIME))
+    {
+        LED_Output_Single((aucOutRing[ucOutCount]),0);
+        if(ucOutCount > sizeof(aucOutRing))
+        {
+            ucOutCount = 0;
+        }
+        LED_Output_Single((aucOutRing[ucOutCount++]),1);
+        if (ucOutCount == sizeof(aucOutRing))
+        {
+            LED_Output_Single((aucInRing[ucInCount]),0);
+            if(ucInCount > sizeof(aucInRing))
+            {
+                ucOutCount = 0;
+            }
+            LED_Output_Single((aucInRing[ucInCount++]),1);
+        }
+        clear_timer0();
+    }
 }
 void LED_Pattern_04 (void)
 {
+    static unsigned char dir;
+    guwCheckTime = check_time0();
+    
+    if(guwCheckTime > (SHORT_ANIMATION_TIME))
+    {
+        clear_timer0();
+        if (dir)
+        {
+            LATD = 0x00;
+            LATC = 0xFF;
+        }
+        else
+        {
+            LATC = 0x00;
+            LATD = 0xFF;
+        }
+        dir = ~dir;
+    }
     
 }
 void LED_Pattern_05 (void)
 {
-    
+    guwCheckTime = check_time0();
+    static unsigned char ucLoops;
+    if ( guwCheckTime > SHORT_ANIMATION_TIME )
+    {
+        if (LATD != 0xFF)
+        {
+            LATD |= (0x0F >> (ucLoops%7));
+        }
+        else if(LATC != 0xFF)
+        {
+            LATC |= (0x0F >> (ucLoops%7));
+            LATD = 0x00;
+        }
+        else
+        {
+            LATC = 0x00;
+            LATD = 0x00;
+        }
+        clear_timer0();
+    }
 }
 void LED_Pattern_06 (void)
 {
@@ -272,4 +356,9 @@ void LED_Pattern_Master(unsigned char ucAnimationCount)
             LED_Pattern_16();
             break;
     }
+}
+
+void Animation_Loop_Timer()
+{
+    
 }

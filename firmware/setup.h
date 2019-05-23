@@ -25,7 +25,7 @@ void LED_Setup(void);
 void Timer_and_Interrupt_setup (void);
 void setup(void);
 
-
+void start_up(void);
 
 
 #endif	/* SETUP_H */
