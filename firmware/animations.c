@@ -204,7 +204,7 @@ void LED_Pattern_02 (void)
         {
             bDir = 1;
         }
-        LED_Output_Single(ucCount, !!(1 - bDir));
+        LED_Output_Single(ucCount, !!(0 + bDir));
         ucCount = ucCount + bDir;
     }
 }
@@ -459,9 +459,45 @@ void LED_Pattern_16 (void)
 {
     
 }
+
+
+void clear_timer3(void){
+     TMR3H = 0x0000;
+}
+
+unsigned short check_timer3(void){
+    unsigned short uw;
+    uw = (TMR3H << 7) + TMR3L;
+    return(uw);
+}
+#define LOOP_TIME 32000
+void Animation_Loop_Timer(void)
+{
+    unsigned short uw;
+    static unsigned short ucLoop;
+    
+    
+    uw = check_timer3();
+    if (uw > LOOP_TIME)
+    {
+        //clear_LED();
+        ucLoop++;
+        clear_timer3();
+    }
+    if(ucLoop > 6400)
+    {
+        ucLoop = 0;
+        gucAnimationState++;
+    }
+    if (gucAnimationState > 7)
+    {
+        gucAnimationState = 0;
+    }
+}
+ 
 void LED_Pattern_Master(unsigned char ucAnimationCount)
 {
-    ucAnimationCount = ucAnimationCount & 0x08;
+    //ucAnimationCount = ucAnimationCount & 0x08;
     static unsigned char ucLocalAnimation;
     if (ucLocalAnimation != ucAnimationCount){
         clear_LED();
@@ -522,32 +558,5 @@ void LED_Pattern_Master(unsigned char ucAnimationCount)
             break;
          */
     }
+    Animation_Loop_Timer();
 }
-
-void clear_timer3(void){
-     TMR3H = 0x0000;
-}
-
-unsigned short check_timer3(void){
-    unsigned short uw;
-    uw = (TMR3H << 7) + TMR3L;
-    return(uw);
-}
-#define LOOP_TIME 33000
-void Animation_Loop_Timer(void)
-{
-    static unsigned short uw;
-    
-    uw = check_timer3();
-    if (uw > LOOP_TIME)
-    {
-        clear_LED();
-        gucAnimationState++;
-        clear_timer3();
-    }
-    if(gucAnimationState > 7){
-        gucAnimationState = 0;
-    }
-    LED_Pattern_Master(gucAnimationState);
-}
- 

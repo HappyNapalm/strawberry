@@ -56,6 +56,7 @@ void main (void)
     while(1)
     {
         //gucAnimationState = 5;
-        Animation_Loop_Timer();
+        //Animation_Loop_Timer();
+        LED_Pattern_Master(gucAnimationState);
     }
 }

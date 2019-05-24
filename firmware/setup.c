@@ -39,43 +39,32 @@ void setup(void)
     Timer_and_Interrupt_setup();
     //INTCONbits.GIE = 1;
 }
-#define RD EECON1bits.RD
-#define WR EECON1bits.WR
-#define WREN EECON1bits.WREN
-#define GIE INTCONbits.GIE
 
 unsigned char read_eeprom(unsigned char ucAddress)
 {
-    if (!RD && !WR)
-    {
-         EEADR = ucAddress;
-         RD = 1;
-         
-    }
-    return(EEDATA);
+  unsigned char Data;
+  EEADR = ucAddress;       // Write The Address From Which We Wonna Get Data
+  EECON1bits.EEPGD = 0;  // Cleared To Point To EEPROM Not The Program Memory
+  EECON1bits.RD = 1;     // Start The Read Operation
+  Data = EEDATA;         // Read The Data
+  return (Data);
+
 }
 
 void write_eeprom(unsigned char ucAddress, unsigned char ucData)
 {
-    unsigned char gie_Status;
-    if(!WR)
-    {
-        EEADR = ucAddress;  
-        EEDATA = ucData;    
-        WREN = 1;
-        EECON1bits.EEPGD=0;// access EEPROM data memory
-        EECON1bits.CFGS=0; // do not access configuration registers
-        gie_Status = GIE;     
-        GIE = 0;
-        //Required as per data sheet
-        EECON2 = 0x55;          
-        EECON2 = 0xaa;          
-        WR = 1;
-        //end of required
-        GIE = gie_Status; 
-        while(WR == 1);
-        WREN = 0;               
-    }
+  while(EECON1bits.WR);  // Waits Until Last Attempt To Write Is Finished
+  EEADR = ucAddress;       // Writes The Addres To Which We'll Wite Our Data
+  EEDATA = ucData;         // Write The Data To Be Saved
+  EECON1bits.EEPGD = 0;  // Cleared To Point To EEPROM Not The Program Memory
+  EECON1bits.WREN = 1;   // Enable The Operation !
+  INTCONbits.GIE = 0;    // Disable All Interrupts Untill Writting Data Is Done
+  EECON2 = 0x55;         // Part Of Writing Mechanism..
+  EECON2 = 0xAA;         // Part Of Writing Mechanism..
+  EECON1bits.WR = 1;     // Part Of Writing Mechanism..
+  INTCONbits.GIE = 1;    // Re-Enable Interrupts
+  EECON1bits.WREN = 0;   // Disable The Operation
+  EECON1bits.WR = 0;     // Ready For Next Writting Operation             
 }
 
 void reset_eeprom(void)
@@ -109,12 +98,9 @@ void HEX_2_LED(unsigned char EEPROM_MEM_ADDRESS)
 
 void start_up(void)
 {
-    //test_to_remove
-    unsigned char uc = 0;
     unsigned char ucDataOut = 0;
     unsigned char ucValid = 0;
-    //unsigned char ucDataOut_Minus1;
-    //static unsigned char ucAddress;
+
     /*
     while (uc != 100)
     {
@@ -152,25 +138,12 @@ void start_up(void)
 //        guclwCheckTime = check_time0();
 //    }
 //    write_eeprom(99,15);
-    for (uc = 0; uc < 100; uc++)
-    {
-        ucDataOut = read_eeprom(uc);
-        if(ucDataOut == 0x42)
-        {
-            ucValid++;
-        }
-    }
-    write_eeprom(ucValid,0x42);
-    gucAnimationState = (ucValid%8);
-    if(ucValid > 95){
-        reset_eeprom();
-    }
     
-    clear_timer0();
-    while(guwCheckTime < 10000)
+    ucDataOut = read_eeprom(0x0A);
+    if(ucDataOut > 7)
     {
-        HEX_2_LED(ucValid);
-        guwCheckTime = check_time0();
+        ucDataOut = 0;
     }
-    
+    gucAnimationState = ucDataOut;
+    write_eeprom(0x0A,(ucDataOut+1));
 }
