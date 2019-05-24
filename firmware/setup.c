@@ -25,6 +25,9 @@ void Timer_and_Interrupt_setup (void)
     OSCCON = 0b01100111;
     //8Mhz clock. Let's keep this slow Base all timing off of this
     //read up on how to make free running timer
+    
+    T3CON = 0b10110101;
+    
     ANSEL = 0x00;
     ANSELH = 0x00;
 }
@@ -69,9 +72,9 @@ void write_eeprom(unsigned char ucAddress, unsigned char ucData)
         EECON2 = 0xaa;          
         WR = 1;
         //end of required
-        GIE = gie_Status;     
+        GIE = gie_Status; 
+        while(WR == 1);
         WREN = 0;               
-
     }
 }
 
@@ -84,6 +87,16 @@ void reset_eeprom(void)
     }
 }
 
+void HEX_2_LED(unsigned char EEPROM_MEM_ADDRESS)
+{
+    unsigned char LED_1;
+    unsigned char LED_2;
+    LED_1 = EEPROM_MEM_ADDRESS & 0x0F;
+    LED_2 = (EEPROM_MEM_ADDRESS & 0xF0 >> 4);
+    LED_Output_Single(LED_1,1);
+    LED_Output_Single(LED_2,1);
+}
+
 //On power up make it so you cycle through the EEPROM from 0-95 (six passes)
 //Read until you find one that mets the following criteria:
 //  (1) Not 0xFF
@@ -93,11 +106,16 @@ void reset_eeprom(void)
 //  (5) Assume that 0xFF at address 0 means we have restarted
 //  (6) If at address 95, then we can reset.
 
+
 void start_up(void)
 {
     //test_to_remove
-    unsigned char uc;
-    unsigned char ucDataOut;
+    unsigned char uc = 0;
+    unsigned char ucDataOut = 0;
+    unsigned char ucValid = 0;
+    //unsigned char ucDataOut_Minus1;
+    //static unsigned char ucAddress;
+    /*
     while (uc != 100)
     {
         guwCheckTime = check_time0();
@@ -121,6 +139,38 @@ void start_up(void)
             clear_timer0();
         }
     }
+     */
     
+    //Test to save 15 to eeprom address 100. And recover it on power cycle.
+//    ucDataOut = read_eeprom(99);
+//    
+//    clear_timer0();
+//    guwCheckTime = check_time0();
+//    while(guwCheckTime < 10000)
+//    {
+//        LATD = ucDataOut;
+//        guclwCheckTime = check_time0();
+//    }
+//    write_eeprom(99,15);
+    for (uc = 0; uc < 100; uc++)
+    {
+        ucDataOut = read_eeprom(uc);
+        if(ucDataOut == 0x42)
+        {
+            ucValid++;
+        }
+    }
+    write_eeprom(ucValid,0x42);
+    gucAnimationState = (ucValid%8);
+    if(ucValid > 95){
+        reset_eeprom();
+    }
+    
+    clear_timer0();
+    while(guwCheckTime < 10000)
+    {
+        HEX_2_LED(ucValid);
+        guwCheckTime = check_time0();
+    }
     
 }

@@ -49,21 +49,13 @@ void flash(void)
 
 void main (void)
 {
-
-    
     setup();
     flash();
     clear_LED();
-    start_up();
+    //start_up();
     while(1)
     {
-        //check_input();
-        //LED_Pattern_Master(gucAnimationState);
-        LED_Pattern_05();
-        
-        //LATD = 0xFF;
-        //LATC = 0xFF;
+        //gucAnimationState = 5;
+        Animation_Loop_Timer();
     }
- 
-
 }

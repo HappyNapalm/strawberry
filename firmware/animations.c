@@ -5,10 +5,9 @@
 
 #include "setup.h"
 
-#define MAX_ANIMATIONS 15
+#define MAX_ANIMATIONS 16
 #define BUTTON PORTBbits.RB0
-#define NUM_LEDS 15
-
+#define NUM_LEDS 16
 
 unsigned char gucAnimationState;
 unsigned short guwCheckTime;
@@ -33,7 +32,6 @@ void clear_timer0( void )
 
 static unsigned char gbButtonState;
 static unsigned char gucDebounceTime = 50;
-unsigned char gbWoot = 1;
 
 void clear_LED (void)
 {
@@ -41,6 +39,14 @@ void clear_LED (void)
     LATC = 0x00;
 }
 
+void all_on_LED (void)
+{
+    LATD = 0xFF;
+    LATC = 0xFF;
+}
+
+
+/*
 void check_input(void){
     unsigned short uc;
     static unsigned short uc_old;
@@ -67,7 +73,7 @@ void check_input(void){
         bButtonStateOld = gbButtonState;
     }
 }
-
+*/
 /*
  *LATD/LATC and equivalent LED.
  * D1 -> Pin 37 -> RC3              D2 -> Pin 1 -> RC7
@@ -99,7 +105,7 @@ void LED_Output_Single (unsigned char ucLED, unsigned char bSignal)
             LATDbits.LATD3 = bSignal;
             break;
         case 3:
-            LATDbits.LATD5 = bSignal;
+            LATDbits.LATD7 = bSignal;
             break;
         case 4: 
             LATCbits.LATC2 = bSignal;
@@ -142,22 +148,36 @@ void LED_Output_Single (unsigned char ucLED, unsigned char bSignal)
 
 
 
+void array_LED_Off (unsigned char aucLEDs[], unsigned char ucSize)
+{
+    for (unsigned char x = 0; x < ucSize;x++)
+    {
+        LED_Output_Single(aucLEDs[x],0);
+    }
+}
+
+void array_LED_On (unsigned char aucLEDs[], unsigned char ucSize)
+{
+    for (unsigned char x = 0; x < ucSize;x++)
+    {
+        LED_Output_Single(aucLEDs[x],1);
+    }
+}
 
 //Cycle up between LEDs, setting them as timer elapses
 void LED_Pattern_01 (void)
 {
     static unsigned char ucCount;
-    
     guwCheckTime = check_time0();
     if(guwCheckTime > (LONG_ANIMATION_TIME))
     {
         clear_timer0();
-        if (ucCount > 16)
+        if (ucCount > 32)
         {
-            clear_LED();
             ucCount = 0;
         }
-        LED_Output_Single(ucCount, 1);
+        
+        LED_Output_Single((ucCount%NUM_LEDS), !(ucCount/NUM_LEDS));
         ucCount++;
     }
 }
@@ -166,54 +186,83 @@ void LED_Pattern_01 (void)
 void LED_Pattern_02 (void)
 {
     static unsigned char ucCount;
-    static unsigned char bDir;
+    static signed char bDir;
     
     guwCheckTime = check_time0();
     if(guwCheckTime > (LONG_ANIMATION_TIME))
     {
         clear_timer0();
-        if (ucCount > 16)
+        if (ucCount > NUM_LEDS)
         {
             ucCount = 0;
-            bDir = !bDir;
         }
-        LED_Output_Single(ucCount, bDir);
-        ucCount++;
+        if(ucCount == NUM_LEDS)
+        {
+            bDir = -1;
+        }
+        if(ucCount == 0)
+        {
+            bDir = 1;
+        }
+        LED_Output_Single(ucCount, !!(1 - bDir));
+        ucCount = ucCount + bDir;
     }
 }
+unsigned char gaucOutRing[]={3,12,8,4,0,2,13,9,5,1,11,7,15};
+//outer ring counts up, then flash.
 void LED_Pattern_03 (void)
 {
-    unsigned char aucOutRing[]={4,13,9,5,1,3,14,10,6,2,12,8};
-    unsigned char aucInRing[]={16,15,11,7};
-    static unsigned char ucOutCount;
-    static unsigned char ucInCount;
+    //unsigned char aucOutRing[]={3,12,8,4,0,2,13,9,5,1,11,7,15};
+    static unsigned char ucCount;
+    static unsigned char phase;
     
     guwCheckTime = check_time0();
-    if(ucOutCount > sizeof(aucOutRing))
+    if(ucCount == sizeof(gaucOutRing))
     {
-        ucOutCount = 0;
+        phase = 1;
+        ucCount = 0;
     }
-    
-    if(guwCheckTime > (LONG_ANIMATION_TIME))
+    if (!phase)
     {
-        LED_Output_Single((aucOutRing[ucOutCount]),0);
-        if(ucOutCount > sizeof(aucOutRing))
+        if(guwCheckTime > (LONG_ANIMATION_TIME))
         {
-            ucOutCount = 0;
+            LED_Output_Single((gaucOutRing[ucCount++]),1);
+            clear_timer0();
         }
-        LED_Output_Single((aucOutRing[ucOutCount++]),1);
-        if (ucOutCount == sizeof(aucOutRing))
+    }
+    else
+    {
+        ucCount = 0;
+        if(guwCheckTime > SHORT_ANIMATION_TIME)
         {
-            LED_Output_Single((aucInRing[ucInCount]),0);
-            if(ucInCount > sizeof(aucInRing))
-            {
-                ucOutCount = 0;
+            clear_timer0();
+            if(phase == 1){
+                all_on_LED();
             }
-            LED_Output_Single((aucInRing[ucInCount++]),1);
+            else
+            {
+                if((phase%2))
+                {
+                    LATD = ~LATC;
+                }
+                else
+                {
+                    LATC = LATD;
+                }
+            }
+            phase++;
         }
-        clear_timer0();
+        if(phase > 45)
+        {
+            phase = 0;
+        }
+    }
+    if(ucCount > sizeof(gaucOutRing))
+    {
+        ucCount = 0;
     }
 }
+//LATC then LATD
 void LED_Pattern_04 (void)
 {
     static unsigned char dir;
@@ -239,29 +288,46 @@ void LED_Pattern_04 (void)
 void LED_Pattern_05 (void)
 {
     guwCheckTime = check_time0();
-    static unsigned char ucLoops;
-    if ( guwCheckTime > SHORT_ANIMATION_TIME )
+    static unsigned char ucCount;
+    if(guwCheckTime > SHORT_ANIMATION_TIME)
     {
-        if (LATD != 0xFF)
-        {
-            LATD |= (0x0F >> (ucLoops%7));
-        }
-        else if(LATC != 0xFF)
-        {
-            LATC |= (0x0F >> (ucLoops%7));
-            LATD = 0x00;
-        }
-        else
-        {
-            LATC = 0x00;
-            LATD = 0x00;
-        }
+        all_on_LED();
+        LED_Output_Single((gaucOutRing[ucCount++]),0);
         clear_timer0();
     }
+    if(ucCount > sizeof(gaucOutRing))
+    {
+        ucCount = 0;
+    }
 }
+//horizontal lines
 void LED_Pattern_06 (void)
 {
+    guwCheckTime = check_time0();
+    unsigned char aucHorizon[5][4] = {
+        {11, 7, 15, 3},
+        {1,14,12,0xff},
+        {5,10,8,0xff},
+        {9,6,4,0xff},
+        {13,0,2,0xff}
+    };
     
+    static unsigned char ucDimen;
+    
+    if (guwCheckTime > SHORT_ANIMATION_TIME)
+    {
+        clear_timer0();
+        clear_LED();
+        array_LED_On(aucHorizon[ucDimen],3);
+        if(aucHorizon[ucDimen][3] != 0xff)
+        {
+            LED_Output_Single(aucHorizon[ucDimen][3], 1);
+        }
+        ucDimen++;
+        if(ucDimen > 5){
+            ucDimen = 0;
+        }
+    }
 }
 void LED_Pattern_07 (void)
 {
@@ -281,7 +347,43 @@ void LED_Pattern_10 (void)
 }
 void LED_Pattern_11 (void)
 {
-    
+    guwCheckTime = check_time0();
+    static unsigned char ucCount;
+    unsigned char ODD_LEDs[] = {0,2,4,6,8,10,12,14};
+    unsigned char EVEN_LEDs[] = {1,3,5,7,9,11,13,15};
+    //unsigned char ucSize;
+    if(guwCheckTime > LONG_ANIMATION_TIME)
+    {
+        clear_timer0();
+        if( ucCount%2 )
+        {
+            //ucSize = sizeof(ODD_LEDs[]);
+            if(ucCount/2)
+            {
+                array_LED_Off(ODD_LEDs,sizeof(ODD_LEDs));
+            }
+            else
+            {
+                array_LED_On(ODD_LEDs,sizeof(ODD_LEDs));
+            }
+        }
+        else
+        {
+            if(ucCount/3)
+            {
+                array_LED_Off(EVEN_LEDs,sizeof(EVEN_LEDs));
+            }
+            else
+            {
+                array_LED_On(EVEN_LEDs,sizeof(EVEN_LEDs));
+            }
+        }
+        ucCount++;
+    }
+    if(ucCount > 4)
+    {
+        ucCount = 0;
+    }
 }
 void LED_Pattern_12 (void)
 {
@@ -291,9 +393,63 @@ void LED_Pattern_13 (void)
 {
     
 }
+//Blink all quicker and quicker
 void LED_Pattern_14 (void)
 {
-    
+    guwCheckTime = check_time0();
+    static unsigned char ucCount;
+    if(ucCount/6 == 0||(ucCount/6 == 4))
+    {
+        if(guwCheckTime > LONG_ANIMATION_TIME)
+        {
+            clear_timer0();
+            if (ucCount%2)
+            {
+                all_on_LED();
+            }
+            else
+            {
+                clear_LED();
+            }
+            ucCount++;
+        }
+    }
+    else if ((ucCount/6 == 1)||(ucCount/6 == 3))
+    {
+        if(guwCheckTime > SHORT_ANIMATION_TIME)
+        {
+            clear_timer0();
+            if (ucCount%2)
+            {
+                all_on_LED();
+            }
+            else
+            {
+                clear_LED();
+            }
+            ucCount++;
+        }
+    }
+    else if (ucCount/6 == 2)
+    {
+        if(guwCheckTime > BLINKY_ANIMATION_TIME)
+        {
+            clear_timer0();
+            if (ucCount%2)
+            {
+                all_on_LED();
+            }
+            else
+            {
+                clear_LED();
+            }
+            ucCount++;
+        }
+    }
+    else
+    {
+        ucCount = 0;
+    }
 }
 void LED_Pattern_15 (void)
 {
@@ -305,6 +461,12 @@ void LED_Pattern_16 (void)
 }
 void LED_Pattern_Master(unsigned char ucAnimationCount)
 {
+    ucAnimationCount = ucAnimationCount & 0x08;
+    static unsigned char ucLocalAnimation;
+    if (ucLocalAnimation != ucAnimationCount){
+        clear_LED();
+        ucLocalAnimation = ucAnimationCount;
+    }
     switch(ucAnimationCount)
     {
         case 0:
@@ -326,11 +488,14 @@ void LED_Pattern_Master(unsigned char ucAnimationCount)
             LED_Pattern_06();
             break;
         case 6:
-            LED_Pattern_07();
+            //LED_Pattern_7();
+            LED_Pattern_11();
             break;
         case 7:
-            LED_Pattern_08();
+            //LED_Pattern_08();
+            LED_Pattern_14();
             break;
+        /*
         case 8:
             LED_Pattern_09();
             break;
@@ -355,10 +520,34 @@ void LED_Pattern_Master(unsigned char ucAnimationCount)
         case 15:
             LED_Pattern_16();
             break;
+         */
     }
 }
 
-void Animation_Loop_Timer()
-{
-    
+void clear_timer3(void){
+     TMR3H = 0x0000;
 }
+
+unsigned short check_timer3(void){
+    unsigned short uw;
+    uw = (TMR3H << 7) + TMR3L;
+    return(uw);
+}
+#define LOOP_TIME 33000
+void Animation_Loop_Timer(void)
+{
+    static unsigned short uw;
+    
+    uw = check_timer3();
+    if (uw > LOOP_TIME)
+    {
+        clear_LED();
+        gucAnimationState++;
+        clear_timer3();
+    }
+    if(gucAnimationState > 7){
+        gucAnimationState = 0;
+    }
+    LED_Pattern_Master(gucAnimationState);
+}
+ 

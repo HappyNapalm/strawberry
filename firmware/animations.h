@@ -23,17 +23,15 @@ unsigned short check_time0 (void);
 void clear_timer0( void );
 void LED_Output_Single (unsigned char ucLED, unsigned char bSignal);
 void clear_LED (void);
+void all_on_LED(void);
 
-void LED_Pattern_01 (void);
+
 void LED_Pattern_Master(unsigned char ucAnimationCount);
 void check_input(void);
 extern unsigned char gucAnimationState;
 void check_input(void);
-void LED_Pattern_03(void);
-void LED_Pattern_02 (void);
-void LED_Pattern_04 (void);
-void LED_Pattern_05 (void);
 extern unsigned short guwCheckTime;
+void Animation_Loop_Timer(void);
 
 
 #endif	/* ANIMATIONS_H */
